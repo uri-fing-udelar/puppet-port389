@@ -29,6 +29,8 @@ class port389::admin::ssl(
     ssl_ca_certs => $::port389::ssl_ca_certs,
   }
 
+  $ssl_server_port = $::port389::ssl_server_port
+
   file { 'enable_admin_ssl.ldif':
     ensure  => file,
     path    => "${::port389::setup_dir}/enable_admin_ssl.ldif",
@@ -39,7 +41,6 @@ class port389::admin::ssl(
     backup  => false,
   }
 
-  $ssl_server_port = $::port389::ssl_server_port
   $ldap_connect = "-x -H \"ldap://localhost:${::port389::server_port}\" -D \"${::port389::root_dn}\" -w \"${::port389::root_dn_pwd}\""
 
   exec { 'enable_admin_ssl.ldif':
