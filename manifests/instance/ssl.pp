@@ -20,6 +20,9 @@ define port389::instance::ssl (
     fail("Use of private type ${name} by ${caller_module_name}")
   }
 
+  # we need the openldap client tools to configure the 389 server for SSL
+  include openldap::client
+
   # based on SSL setup instructions from:
   # http://directory.fedoraproject.org/wiki/Howto:SSL#Starting_the_Server_with_SSL_enabled
   # and
@@ -56,7 +59,7 @@ define port389::instance::ssl (
     command   => "ldapmodify ${ldap_connect} -f ${::port389::setup_dir}/enable_ssl.ldif",
     unless    => "ldapsearch ${ldap_connect} -b cn=config \"nsslapd-security=on\" nsslapd-security | grep \"nsslapd-security: on\"",
     logoutput => true,
-    require   => File['enable_ssl.ldif'],
+    require   => [Class['openldap::client'], File['enable_ssl.ldif']],
   } ->
   exec { "${name}-set_secureport.ldif":
     path      => ['/bin', '/usr/bin'],
@@ -64,7 +67,7 @@ define port389::instance::ssl (
     unless    => "ldapsearch ${ldap_connect} -b cn=config \"nsslapd-secureport=${ssl_server_port}\" nsslapd-secureport \
 | grep \"nsslapd-secureport: ${ssl_server_port}\"",
     logoutput => true,
-    require   => File["${name}-set_secureport.ldif"],
+    require   => [Class['openldap::client'], File["${name}-set_secureport.ldif"]],
   }
 
   $certdir = "/etc/dirsrv/slapd-${name}"
